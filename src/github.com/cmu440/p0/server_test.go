@@ -324,10 +324,10 @@ func (ts *testSystem) runTest(numMsgs, timeout int, normalClients, slowClients [
 					return fmt.Errorf("non-slow clients received %d messages, expected %d",
 						normalReads, totalNonSlowReads)
 				}
-				if slowReads < 75 {
-					// Make sure the server buffered 75 messages for
+				if slowReads < 500 {
+					// Make sure the server buffered 500 messages for
 					// slow-reading clients.
-					return errors.New("slow-reading client read less than 75 messages")
+					return errors.New("slow-reading client read less than 500 messages")
 				}
 				return nil
 			}
@@ -540,9 +540,9 @@ func TestCount2(t *testing.T) {
 }
 
 func TestSlowClient1(t *testing.T) {
-	testSlowClient(t, "TestSlowClient1", 1000, 1, 1, 4000, 8000)
+	testSlowClient(t, "TestSlowClient1", 2000, 1, 1, 5000, 10000)
 }
 
 func TestSlowClient2(t *testing.T) {
-	testSlowClient(t, "TestSlowClient2", 1000, 4, 2, 5000, 10000)
+	testSlowClient(t, "TestSlowClient2", 2000, 4, 2, 6000, 12000)
 }
