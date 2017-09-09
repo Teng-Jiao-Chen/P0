@@ -193,6 +193,7 @@ func (ts *testSystem) runTest(numMsgs, timeout int, normalClients, slowClients [
 	randGen := rand.New(rand.NewSource(time.Now().Unix()))
 
 	keyMap := make(map[string]int)
+    keyValueMap := make(map[string][]string)
 	keyValueTrackMap := make(map[string]int)
 	readChan, writeChan := make(chan *networkEvent), make(chan *networkEvent)
 
@@ -221,8 +222,6 @@ func (ts *testSystem) runTest(numMsgs, timeout int, normalClients, slowClients [
 	for slowReads+normalReads < totalReads ||
 		slowGetWrites+normalGetWrites < totalGetWrites {
 
-        //fmt.Printf("%i, %i\n", slowReads+normalReads, totalReads)
-
 		select {
 		case cmd := <-readChan:
 			cli, msg := cmd.cli, cmd.readMsg
@@ -245,7 +244,7 @@ func (ts *testSystem) runTest(numMsgs, timeout int, normalClients, slowClients [
 			} else {
 				// The message has been read for the last time.
 				// Erase it from memory.
-				//delete(keyValueTrackMap, msg)
+				delete(keyValueTrackMap, msg)
 			}
 			if hasSlowClients && cli.slow {
 				slowReads++
@@ -274,9 +273,15 @@ func (ts *testSystem) runTest(numMsgs, timeout int, normalClients, slowClients [
 				keySendCount = 0
 			}
 
+    
 			value_id := keySendCount / updateFreq
 			if keySendCount%updateFreq == 0 {
                 keyMap[key]++
+                _, ok := keyValueMap[key]
+                if !ok {
+                    keyValueMap[key] = make([]string, 1)
+                }
+                keyValueMap[key] = append(keyValueMap[key], fmt.Sprintf("value_%d\n", value_id))
 				if !hasSlowClients {
 					value = fmt.Sprintf("put,%s,value_%d\n", key, value_id)
 				} else {
@@ -298,14 +303,15 @@ func (ts *testSystem) runTest(numMsgs, timeout int, normalClients, slowClients [
             }
 
 			request := fmt.Sprintf("get,%s\n", key)
-			keyValue := fmt.Sprintf("%s,value_%d\n", key, value_id)
 
-			if _, ok := keyValueTrackMap[keyValue]; !ok {
-				keyValueTrackMap[keyValue] = numClients
-			} else {
-				keyValueTrackMap[keyValue] += numClients
-			}
-
+            for _, v := range keyValueMap[key] {
+                keyValue := fmt.Sprintf("%s,%s", key, v)
+			    if _, ok := keyValueTrackMap[keyValue]; !ok {
+				    keyValueTrackMap[keyValue] = 1
+			    } else {
+				    keyValueTrackMap[keyValue] += 1
+			    }
+            }
 
 			if _, err := cli.conn.Write([]byte(request)); err != nil {
 				// Abort! Error writing to the network.
