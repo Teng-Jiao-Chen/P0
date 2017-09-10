@@ -4,17 +4,11 @@ package p0
 
 type keyValueServer struct {
 	// TODO: implement this!
-	var connectedClients int
-
-
-
 }
 
 // New creates and returns (but does not start) a new KeyValueServer.
 func New() KeyValueServer {
 	// TODO: implement this!
-	init_db()
-
 	return nil
 }
 
