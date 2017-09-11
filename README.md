@@ -1,4 +1,4 @@
-p0
+Project 0: Implementing a key-value messaging system
 ==
 
 This repository contains the starter code that you will use as the basis of your key-value messaging system
